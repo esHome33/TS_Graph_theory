@@ -21,8 +21,7 @@ export async function testSpeed(network: Network, algo: string, params: any) {
 
 function logNetwork(network: Network) {
 	return (
-		"\n" +
-		`${network.net_informations}` 
+		"\n" + `${network.net_informations}`
 		// "\n" +
 		// `liste des noeuds = ${JSON.stringify(network.vertex_list)}` +
 		// "\n" +
@@ -222,7 +221,7 @@ function generalTesting() {
 			["e", "g", 5],
 			["f", "g", 4],
 		]);
-		//console.log(valuesTest(test_net));
+
 		const dij = test_net.dijkstra("a", "g");
 		console.log(`Dijkstra = ${JSON.stringify(dij)}`);
 		let arrivee = "f";
@@ -239,7 +238,7 @@ function generalTesting() {
 	}
 }
 
-const  etienne_tests = async () => {
+const etienne_tests = async () => {
 	// compareQuadAlgorithms(nex.genCompleteNetwork(10), true);
 	// randomNetEfficiencyTest(20, { min: 20, max: 120 }, "rand_dense.json");
 

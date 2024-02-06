@@ -1,68 +1,44 @@
-- [NeTS](#nets)
-- [Basic Functionality](#basic-functionality)
-- [Extra functionality](#extra-functionality)
-- [Quadruplets](#quadruplets)
 
-## NeTS
+Graph Theory basic utilities. This work is heavily based on rodigu's [NeTS](https://github.com/rodigu/NeTS).
+I added some comments in rodigu's code in order to understand his work.
 
-NeTS is a TypeScript Graph Theory/Network Science library.
-Latest release can also be found at https://deno.land/x/nets@v0.2.3
+I also added a dijkstra function in Network class and some other utilities methods and properties. This function implements E. Dijkstra's shortest path finding algorithm. This algorithm works efficiently by using a [MinHeap](https://github.com/datastructures-js/heap) from eyas-ranjous [@datastructures-js](https://github.com/eyas-ranjous).
 
-Import it using the Deno import:
+As I'm not using Deno, so I commented all stuff related to Deno out. In order to use read and write Adjacency Matrix functions for a Network, I added the import of "node:fs/promises" in algorithms.ts.
 
-```ts
-import { Network } from "https://deno.land/x/nets@v0.1.0/mod.ts";
-```
+I also wanted to work and debug with vscode : a vscode launch config is added.
 
-But it might be simpler to use the [Deno convention for external code linking](https://deno.land/manual/linking_to_external_code):
+I went through basic tests using the tester.ts file created by rodigu.
+
+
+## Dijkstra algorithm usage
 
 ```ts
-// In `./ne.ts`
-export * from "https://deno.land/x/nets@v0.1.0/mod.ts";
+	const test_net = new Network();
+	try {
+		test_net.addEdgeList([
+			["a", "b", 1],
+			["a", "c", 2],
+			["b", "d", 2],
+			["b", "f", 3],
+			["c", "d", 3],
+			["c", "e", 4],
+			["d", "e", 2],
+			["d", "f", 3],
+			["d", "g", 3],
+			["e", "g", 5],
+			["f", "g", 4],
+		]);
+		// dijkstra(start node, end node) provides a list of vertices and its best predecessor.
+    // Understand that *all* best ways from start_node to all other nodes are known !
+		const dij = test_net.dijkstra("a", "g");
+    // y can log this list :
+		console.log(`Dijkstra = ${JSON.stringify(dij)}`);
+		let end_node = "f";
+    // and you can get the path form start node to 
+		let path_to_end_node = test_net.analysePredecesseurs(test_net.predecessor, end_node);
+		console.log(`chemin de a vers ${end_node} = ${path_to_end_node}`);
+
 ```
 
-This is what will be used from now on.
-
-## Basic Functionality
-
-You can create an instance the Network class:
-
-```ts
-const net = new Network();
-
-net.addEdgeList([
-  [1, 2],
-  [2, 3],
-  [3, 2],
-  [1, 5],
-]);
-```
-
-Adding edges is forced by default.
-This means that if the nodes don't exist in the network, the function will create them before adding the edge.
-
-The network has an `edge_limit = 2500` and a `vertex_limit = 1500` set when instancing.
-It can be changed with the initial arguments for the network:
-
-```ts
-const net = new Network({ edge_limit: 100, vertex_limit = 200 });
-```
-
-## Extra functionality
-
-You can import a network from a CSV using the `loadAdjacencyMatrix` function:
-
-```ts
-import { loadAdjacencyMatrix } from "./ne.ts";
-
-const net = await loadAdtacencyMatrix("file_name.csv");
-```
-
-For testing, you can use the `randomNetworkGen` function.
-It randomly generates a network with the given arguments.
-
-## Quadruplets
-
-The quadruplets algorithm has the same exponetial time complexity as
-the edge pair algorithm.
-However, the less dense the network, the faster the quadruplets algorithm can get.
+done Feb 06, 2024.

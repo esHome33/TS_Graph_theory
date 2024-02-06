@@ -1,0 +1,17 @@
+{
+  "name": "graphes",
+  "version": "1.0",
+  "description": "structures de données et algorithmes pour la théorie des graphes",
+  "license": "GPL-3.0",
+  "author": {
+    "name": "ESHome"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@types/node": "^20.11.9"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@datastructures-js/heap": "^4.3.3"
+  }
+}

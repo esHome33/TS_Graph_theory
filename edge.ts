@@ -38,7 +38,7 @@ export class Edge {
 
 
 	toString(): string {
-		return `${this.from} -> ${this.to.toString()} W:${this.weight}`;
+		return `${this.from} -> ${this.to} W:${this.weight}`;
 	}
 
 	/**

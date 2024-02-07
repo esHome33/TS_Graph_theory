@@ -84,7 +84,10 @@ export default class Network {
 		// initialisation of all nodes in the Network
 		this.value_a_infini(this.vertices);
 
-		const start_vertex = this.vertices.get(start);
+		const start_vertex: Vertex | undefined = this.vertices.get(start);
+		if (!start_vertex) {
+			return ["ERREUR start vertex not found"];
+		}
 		start_vertex.weight = 0;
 
 		// use MinHeap to store already accessed Nodes ordered by their weight
@@ -100,7 +103,10 @@ export default class Network {
 		// main Dijkstra iteration
 		while (queue.size() > 0 && !finish) {
 			counter++;
-			const current_vertex: Vertex = queue.pop();
+			const current_vertex: Vertex | null = queue.pop();
+			if (!current_vertex) {
+				break;
+			}
 			const voisins = this.edge_neighbors(
 				current_vertex.id,
 				!this.is_directed
@@ -131,20 +137,24 @@ export default class Network {
 	 * que le poids total depuis le noeud de départ (celui sans prédécesseur)
 	 * @returns un tableau comportant le nom du noeud et de son prédécesseur ainsi que le poids total.
 	 */
-	private getPredecesseurs = (pred: { [id: base_id]: Vertex }): string[] => {
+	private getPredecesseurs = (pred: {
+		[id: base_id]: Vertex | null;
+	}): string[] => {
 		let resu: string[] = [];
 
 		for (let p of this.vertices) {
 			const idx: base_id = p[0];
-			const v: Vertex = pred[idx];
-			if (v === null || v === undefined) {
+			const v: Vertex | null = pred[idx];
+			if (v === null) {
 				resu.push(`pred de ${idx} inconnu`);
 			} else {
-				const e: Edge = this.edgeBetween(idx, v.id);
-				const e_weight = e.weight;
-				resu.push(
-					`predecessor of ${idx} = ${v.id} (${v.weight + e_weight})`
-				);
+				const e: Edge | undefined = this.edgeBetween(idx, v.id);
+				if (e) {
+					const e_weight = e.weight;
+					resu.push(
+						`predecessor of ${idx} = ${v.id} (${v.weight + e_weight})`
+					);
+				}
 			}
 		}
 		return resu;
@@ -160,7 +170,7 @@ export default class Network {
 	 * @throws ERROR dans le cas où le noeud d'arrivée fourni ne se trouve pas dans le Network.
 	 */
 	analysePredecesseurs = (
-		pred: { [id: base_id]: Vertex },
+		pred: { [id: base_id]: Vertex|null },
 		noeud_arrivee: base_id
 	): string => {
 		if (!this.hasVertex(noeud_arrivee)) {
@@ -168,14 +178,14 @@ export default class Network {
 		}
 
 		let noeud_courant: base_id = noeud_arrivee;
-		let noeud_precedent: Vertex;
+		let noeud_precedent: Vertex|null;
 		let resu: string = "";
 		do {
 			noeud_precedent = pred[noeud_courant];
 
 			if (noeud_precedent !== null) {
 				// on change pour la boucle suivant
-				const e: Edge = this.edgeBetween(noeud_precedent.id, noeud_courant);
+				const e: Edge|undefined = this.edgeBetween(noeud_precedent.id, noeud_courant);
 				let e_weight: number = 0;
 				if (e) {
 					e_weight = e.weight;
@@ -206,7 +216,7 @@ export default class Network {
 		v1: Vertex,
 		v2: Vertex,
 		d_v1_to_v2: number,
-		predecessor: { [id: string]: Vertex; [id: number]: Vertex }
+		predecessor: { [id: string]: Vertex | null; [id: number]: Vertex | null }
 	) => {
 		let poids1: number = v1.weight;
 		let poids2: number = v2.weight;
@@ -699,11 +709,15 @@ export default class Network {
 			const to_index = e.vertices.to;
 			if (from_index === id) {
 				const v = this.vertices.get(to_index);
-				neighborhood.push({ to: v, weight: w });
+				if (v) {
+					neighborhood.push({ to: v, weight: w });
+				}
 			}
 			if (to_index === id && oriented) {
 				const v = this.vertices.get(from_index);
-				neighborhood.push({ to: v, weight: w });
+				if (v) {
+					neighborhood.push({ to: v, weight: w });
+				}
 			}
 		});
 

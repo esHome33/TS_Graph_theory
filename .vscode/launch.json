@@ -5,21 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Dijkstra",
-            "program": "${workspaceFolder}/dijkstra.ts",
-            "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node",
-            "preLaunchTask": "tsc: build - tsconfig.json",
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ]
-        },
-        {
             "name": "TEST",
-            "program": "${workspaceFolder}/tester.ts",
+            "program": "${workspaceFolder}/out/tester.js",
             "request": "launch",
             "skipFiles": [
                 "<node_internals>/**"
@@ -37,7 +24,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/test_legacy.ts",
+            "program": "${workspaceFolder}/out/test_legacy.js",
             "preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

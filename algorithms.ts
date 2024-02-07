@@ -1,5 +1,5 @@
-import Network from "./network";
-import { ParsedCSV, base_id, NetworkArgs } from "./enums";
+import Network from "./network.js";
+import { ParsedCSV, base_id, NetworkArgs } from "./enums.js";
 import * as fs from "node:fs/promises";
 
 /**
@@ -115,7 +115,7 @@ export async function loadAdjacencyMatrix(
 		const lignes: string[] = fic.split("\n");
 		return traiteData(lignes);
 	} catch (error) {
-		return undefined;
+		return new Network();
 	}
 }
 

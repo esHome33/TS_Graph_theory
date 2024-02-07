@@ -1,4 +1,4 @@
-import { base_id, VertexArgs } from "./enums";
+import { base_id, VertexArgs } from "./enums.js";
 
 /**
  * represents a "to" vertex that is linked by an edge of weight weight accessible from a "from" Vertex.

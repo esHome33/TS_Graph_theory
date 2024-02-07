@@ -6,14 +6,14 @@ import {
 	genCompleteNetwork,
 	genRandomNetwork,
 	loadAdjacencyMatrix,
-} from "./algorithms";
-import Network from "./network";
+} from "./algorithms.js";
+import Network from "./network.js";
 
 const start_time = new Date().getTime();
 
 export async function testSpeed(network: Network, algo: string, params: any) {
 	const start_time = new Date().getTime();
-	await network[algo](params);
+	//await network(params);
 	const end_time = new Date().getTime();
 	const elapsed_time = (end_time - start_time) / 1000;
 	console.log("Time taken: ", elapsed_time);
@@ -252,12 +252,12 @@ const etienne_tests = async () => {
 	console.log(` ${net.dot_description}`);
 	// console.log(`neighbr = ${JSON.stringify(net.ranked_neighborhood)}`);
 	// console.log(`Vertices avant infini = ${JSON.stringify(net.positive_vertices)}`);
-	let liste: string[];
+	let liste: string[]=[];
 	let chemin: string = "PAS DE CHEMIN";
 	try {
 		liste = net.dijkstra("BTC", "EUR");
 		chemin = net.analysePredecesseurs(net.predecessor, "USDT");
-	} catch (error) {
+	} catch (error:any) {
 		console.log(error.message);
 	}
 	//console.log(`Vertices après infini = ${JSON.stringify(net.positive_vertices)}`);

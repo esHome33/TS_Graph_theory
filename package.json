@@ -8,9 +8,10 @@
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",
-    "@types/node": "^20.11.9"
+    "@types/node": "^20.11.9",
+    "tsup": "^8.0.1"
   },
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@datastructures-js/heap": "^4.3.3"
   }

@@ -7,7 +7,7 @@ import {
 	genRandomNetwork,
 	loadAdjacencyMatrix,
 } from "./algorithms.js";
-import Network from "./network.js";
+import Network, { DijkstraResult } from "./network.js";
 
 const start_time = new Date().getTime();
 
@@ -252,18 +252,62 @@ const etienne_tests = async () => {
 	console.log(` ${net.dot_description}`);
 	// console.log(`neighbr = ${JSON.stringify(net.ranked_neighborhood)}`);
 	// console.log(`Vertices avant infini = ${JSON.stringify(net.positive_vertices)}`);
-	let liste: string[]=[];
-	let chemin: string = "PAS DE CHEMIN";
+	let dijkstra_result: DijkstraResult;
+	let chemin: string = "Pas de chemin entre BTC et USDT";
 	try {
-		liste = net.dijkstra("BTC", "EUR");
+		dijkstra_result = net.dijkstra("BTC", "EUR");
 		chemin = net.analysePredecesseurs(net.predecessor, "USDT");
-	} catch (error:any) {
-		console.log(error.message);
+		console.log(
+			`resu Dijkstra = ${JSON.stringify(dijkstra_result.predecessors)}`
+		);
+		console.log(`chemin entre EUR et USDT = ${chemin}`);
+	} catch (error: any) {
+		console.log(`ERROR : ${error.message}`);
 	}
 	//console.log(`Vertices après infini = ${JSON.stringify(net.positive_vertices)}`);
-	console.log(`resu Dijkstra = ${JSON.stringify(liste)}`);
-	console.log(`chemin entre EUR et USDT = ${chemin}`);
+	example();
 	console.log("Test end !");
+};
+
+const example = () => {
+	const test_net = new Network();
+	try {
+		test_net.addEdgeList([
+			["a", "b", 1],
+			["a", "c", 2],
+			["b", "d", 2],
+			["b", "f", 3],
+			["c", "d", 3],
+			["c", "e", 4],
+			["d", "e", 2],
+			["d", "f", 3],
+			["d", "g", 3],
+			["e", "g", 5],
+			["f", "g", 4],
+		]);
+		// dijkstra(start node, end node) provides a list of vertices and,
+		// for each vertex, its best predecessor and the distance/weight to get there.
+		//
+		// Understand that *all* best ways from start_node are known after dijkstra() method call.
+		const dijkstra_result: DijkstraResult = test_net.dijkstra("a", "g");
+		// you can log this list :
+		console.log(
+			`table of predecessors for all vertices = ${JSON.stringify(
+				dijkstra_result.predecessors
+			)}`
+		);
+		// and the path from "a" to "g" is :
+		const path = dijkstra_result.path;
+		// but you can also get every path from "a" to an other node in the graph with method analysePredecesseurs()
+		let another_node = "f";
+		let path_to_another_node = test_net.analysePredecesseurs(
+			test_net.predecessor,
+			another_node
+		);
+		console.log(`path to ${another_node} = ${path_to_another_node}`);
+	} catch (error: any) {
+		console.log(`an error occured : ${error.message}`);
+	}
 };
 
 etienne_tests();

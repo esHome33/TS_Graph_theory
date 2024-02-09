@@ -10,6 +10,19 @@ import {
 } from "./enums.js";
 import { MinHeap } from "@datastructures-js/heap";
 
+/**
+ * return when using ```dijkstra()``` method in {@link Network}
+ */
+export type DijkstraResult = {
+	predecessors: string[];
+	path: string;
+};
+
+/**
+ * Network stores a Graph, with Edges, Vertices, weights for them and orientation.
+ *
+ * A good number of methods and properties are available.
+ */
 export default class Network {
 	/**
 	 * la liste des arcs de ce graphe
@@ -31,7 +44,11 @@ export default class Network {
 	private free_vid: number;
 
 	/**
-	 * @param  {NetworkArgs} [args={}]
+	 *  Construct a new Network.
+	 *
+	 * 	By default, it will be not directed, not a multigraph (multiple
+	 *  different edges between two same vertices),
+	 *  and with 1500 vertices max and 2500 edges max.
 	 */
 	constructor(args: NetworkArgs = {}) {
 		this.edges = new Map();
@@ -56,16 +73,17 @@ export default class Network {
 
 	/**
 	 * Dijkstra shortest path implementation for a Network.
-	 * Constructs not only the ```string[]``` return value, but also a predecessor list
-	 * (a global variable, named ```predecessor```, that is a member of Network class).
+	 *
 	 * This implementation uses a MinHeap (from "@datastructures-js/heap") to store all
 	 * the best weighed vertices.
 	 *
 	 * @param start id of departure node
 	 * @param end id of arrival node
-	 * @returns a list of all nodes in the graph and their best predecessor
+	 * @returns a list of all nodes in the graph and their best predecessor + the path from start to end
 	 */
-	dijkstra = (start: base_id, end: base_id): string[] => {
+	dijkstra = (start: base_id, end: base_id): DijkstraResult => {
+		// erase the precedent list of predecessors.
+		this.predecessor = {};
 		// check if all is OK with the nodes id's
 		const s_ok = this.hasVertex(start);
 		const e_ok = this.hasVertex(end);
@@ -79,14 +97,21 @@ export default class Network {
 				liste.push("ERREUR : le noeud d'arrivée n'est pas dans le graphe");
 				throw { message: ERROR.INEXISTENT_END_VERTICE };
 			}
-			return liste;
+
+			return {
+				predecessors: liste,
+				path: "ERREUR path not available",
+			};
 		}
 		// initialisation of all nodes in the Network
 		this.value_a_infini(this.vertices);
 
 		const start_vertex: Vertex | undefined = this.vertices.get(start);
 		if (!start_vertex) {
-			return ["ERREUR start vertex not found"];
+			return {
+				predecessors: ["ERREUR start vertex not found"],
+				path: "ERREUR path not available",
+			};
 		}
 		start_vertex.weight = 0;
 
@@ -127,7 +152,8 @@ export default class Network {
 		}
 		//console.log(`main while loop exited (${counter} iterations)`);
 		const resu = this.getPredecesseurs(this.predecessor);
-		return resu;
+		const chemin = this.analysePredecesseurs(this.predecessor, end);
+		return { predecessors: resu, path: chemin };
 	};
 
 	/**
@@ -146,14 +172,12 @@ export default class Network {
 			const idx: base_id = p[0];
 			const v: Vertex | null = pred[idx];
 			if (v === null) {
-				resu.push(`pred de ${idx} inconnu`);
+				resu.push(`${idx} START`);
 			} else {
 				const e: Edge | undefined = this.edgeBetween(idx, v.id);
 				if (e) {
 					const e_weight = e.weight;
-					resu.push(
-						`predecessor of ${idx} = ${v.id} (${v.weight + e_weight})`
-					);
+					resu.push(`${idx} <- ${v.id} (${v.weight + e_weight})`);
 				}
 			}
 		}
@@ -170,7 +194,7 @@ export default class Network {
 	 * @throws ERROR dans le cas où le noeud d'arrivée fourni ne se trouve pas dans le Network.
 	 */
 	analysePredecesseurs = (
-		pred: { [id: base_id]: Vertex|null },
+		pred: { [id: base_id]: Vertex | null },
 		noeud_arrivee: base_id
 	): string => {
 		if (!this.hasVertex(noeud_arrivee)) {
@@ -178,14 +202,17 @@ export default class Network {
 		}
 
 		let noeud_courant: base_id = noeud_arrivee;
-		let noeud_precedent: Vertex|null;
+		let noeud_precedent: Vertex | null;
 		let resu: string = "";
 		do {
 			noeud_precedent = pred[noeud_courant];
 
 			if (noeud_precedent !== null) {
 				// on change pour la boucle suivant
-				const e: Edge|undefined = this.edgeBetween(noeud_precedent.id, noeud_courant);
+				const e: Edge | undefined = this.edgeBetween(
+					noeud_precedent.id,
+					noeud_courant
+				);
 				let e_weight: number = 0;
 				if (e) {
 					e_weight = e.weight;

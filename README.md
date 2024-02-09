@@ -29,15 +29,19 @@ I went through basic tests using the tester.ts file created by rodigu.
 			["e", "g", 5],
 			["f", "g", 4],
 		]);
-		// dijkstra(start node, end node) provides a list of vertices and its best predecessor.
-    // Understand that *all* best ways from start_node to all other nodes are known !
-		const dij = test_net.dijkstra("a", "g");
-    // y can log this list :
-		console.log(`Dijkstra = ${JSON.stringify(dij)}`);
-		let end_node = "f";
-    // and you can get the path form start node to 
-		let path_to_end_node = test_net.analysePredecesseurs(test_net.predecessor, end_node);
-		console.log(`chemin de a vers ${end_node} = ${path_to_end_node}`);
+		// dijkstra(start node, end node) provides a list of vertices and,
+		// for each vertex, its best predecessor and the distance/weight to get there.
+		//
+    	// Understand that *all* best ways from start_node are known after dijkstra() method call.
+		const dijkstra_result:DijkstraResult = test_net.dijkstra("a", "g");
+    	// you can log this list :
+		console.log(`table of predecessors for all vertices = ${JSON.stringify(dijkstra_result.predecessors)}`);
+		// and the path from "a" to "g" is :
+		const path = dijkstra_result.path;
+		// but you can also get every path from "a" to an other node in the graph with method analysePredecesseurs()
+		let another_node = "f";
+		let path_to_another_node = test_net.analysePredecesseurs(test_net.predecessor, another_node);
+		console.log(`path to ${another_node} = ${path_to_another_node}`);
 
 ```
 

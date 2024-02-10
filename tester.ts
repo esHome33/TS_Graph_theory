@@ -298,6 +298,7 @@ const example = () => {
 		);
 		// and the path from "a" to "g" is :
 		const path = dijkstra_result.path;
+		console.log(`path found by dijkstra() ${dijkstra_result.path}`);
 		// but you can also get every path from "a" to an other node in the graph with method analysePredecesseurs()
 		let another_node = "f";
 		let path_to_another_node = test_net.analysePredecesseurs(
@@ -305,10 +306,13 @@ const example = () => {
 			another_node
 		);
 		console.log(`path to ${another_node} = ${path_to_another_node}`);
+
+		console.log(test_net.dot_description);
 	} catch (error: any) {
 		console.log(`an error occured : ${error.message}`);
 	}
 };
 
-etienne_tests();
+//etienne_tests();
 //generalTesting();
+example();

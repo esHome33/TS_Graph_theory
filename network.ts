@@ -11,10 +11,17 @@ import {
 import { MinHeap } from "@datastructures-js/heap";
 
 /**
- * return when using ```dijkstra()``` method in {@link Network}
+ * What ```dijkstra()``` method in {@link Network} returns.
  */
 export type DijkstraResult = {
+	/**
+	 *  An array of each vertex in the Network and his best predecessor and
+	 *  the distance to go to each of these vertices form the start vertex.
+	 */
 	predecessors: string[];
+	/**
+	 * the path to go from the start to the end vertex
+	 */
 	path: string;
 };
 
@@ -272,13 +279,67 @@ export default class Network {
 		}
 	}
 
+	/**
+	 * get vital information about this Network and prints all vertices id.
+	 */
 	get net_informations(): string {
 		let resu: string = "";
-		resu += `This Network has ${this.vertices.size} vertices, ${this.edges.size} edges, is_directed=${this.is_directed}.\n`;
+		resu += `${this.vertices.size} vertices - ${this.edges.size} edges - is_directed = ${this.is_directed}`;
 		for (let vertex of this.vertices) {
 			resu += `${vertex[1].id} `;
 		}
 		return resu;
+	}
+
+	//////////// caching neighbor list in order to increase speed when a Network is no more changed //////
+
+	//NOTE: ajout pour vertices neighbor cache for Dijkstra
+	/**
+	 * true if {@link constructNeighborsCache()} was called.
+	 * false when a new edge or new vertex is created
+	 * @author ESHome33 - 2024
+	 */
+	private _neighbors_cached = false;
+
+	/**
+	 *  A cache that stores, for each given vertex in the Network an array of
+	 * 		- neighbor vertex id (a vertex that is linked to the given vertex)
+	 * 		- the weight of the edge linking the two edges
+	 * @author ESHome33 - 2024
+	 */
+	private _neighbors: { [id: base_id]: VertexNeighbor[] } = {};
+
+	/**
+	 * Method that stores in the {@link _neighbors} cache all neighbors for all vertices
+	 * @author ESHome33 - 2024
+	 */
+	private constructNeighborsCache(oriented: boolean) {
+		// search all neighbors for all vertices
+		// construct neighbor cache
+		for (let current_v of this.vertices) {
+			// search all vertices that are connected with current_v
+			const neighborhood: VertexNeighbor[] = [];
+			this.edges.forEach((e: Edge) => {
+				const w = e.weight;
+				const from_index = e.vertices.from;
+				const to_index = e.vertices.to;
+				if (from_index === current_v[1].id) {
+					const v = this.vertices.get(to_index);
+					if (v) {
+						neighborhood.push({ to: v, weight: w });
+					}
+				}
+				if (to_index === current_v[1].id && oriented) {
+					const v = this.vertices.get(from_index);
+					if (v) {
+						neighborhood.push({ to: v, weight: w });
+					}
+				}
+			});
+			this._neighbors[current_v[1].id] = neighborhood;
+			// the cache is now up to date
+			this._neighbors_cached = true;
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,6 +513,8 @@ export default class Network {
 
 	/**
 	 * returns the description of this Network in DOT language
+	 *
+	 * @author ESHome33 - 2024
 	 */
 	get dot_description(): string {
 		let resu: string = "\n";
@@ -464,9 +527,18 @@ export default class Network {
 
 	/**
 	 * Ajoute un arc entre les deux noeuds passés en argument
+	 *
+	 * Si do_force = false, il faut que les sommets existent dans Network
+	 * pour que l'arc soit ajouté.
+	 *
 	 * @param  {EdgeArgs} args contient l'id des noeuds départ et arrivée,
 	 * 	ainsi que optionnellement le poids. Ce poids est par défaut à ```1```
-	 * do_force est par défaut à ```true```
+	 * 	do_force est par défaut à ```true```
+	 *
+	 * @returns ```true``` if edge was effectively added
+	 *
+	 * @throws Errors in some cases.
+	 *
 	 */
 	addEdge(args: EdgeArgs): boolean {
 		args.do_force ??= true;
@@ -481,12 +553,14 @@ export default class Network {
 		if (this.edges.size >= this.edge_limit)
 			throw { message: ERROR.EDGE_LIMIT };
 
+		// adding vertices (or throw error if do_force is false)
 		if (!args.do_force) {
 			if (!this.vertices.has(args.from))
 				throw { message: ERROR.INEXISTENT_VERTICE, vertex: args.from };
 			if (!this.vertices.has(args.to))
 				throw { message: ERROR.INEXISTENT_VERTICE, vertex: args.to };
 		} else {
+			this._neighbors_cached = false; //NOTE: ajout pour neighbor cache
 			if (!this.vertices.has(args.from)) this.addVertex({ id: args.from });
 			if (!this.vertices.has(args.to)) this.addVertex({ id: args.to });
 		}
@@ -494,6 +568,7 @@ export default class Network {
 		if (!this.is_multigraph && this.hasEdge(args.from, args.to)) return false;
 		// throw { message: ERROR.NOT_MULTIGRAPH };
 
+		this._neighbors_cached = false; //NOTE: ajout pour neighbor cache
 		this.edges.set(args.id, new Edge(args));
 		return true;
 	}
@@ -501,16 +576,18 @@ export default class Network {
 	/**
 	 * Add multiple edges from a map of edges.
 	 * @param  {Map<base_id, Edge>} edge_map
+	 * @throws Errors in some cases.
 	 */
 	addEdgeMap(edge_map: Map<base_id, Edge>) {
 		edge_map.forEach((edge) => this.addEdge(edge.args));
 	}
 
 	/**
-	 * Add multiple edges from a list of [base_id, base_id , number?].
+	 * Add multiple edges from a list.
 	 *
 	 * @param edge_list the list of two id's of vertex and the weight of the edge
-	 * (if omitted, 1 is the default)
+	 * (if weight is omitted, the default weight of 1 is used)
+	 * @throws Errors in some cases.
 	 */
 	addEdgeList(edge_list: [base_id, base_id, number?][]) {
 		edge_list.forEach((edge) => {
@@ -524,7 +601,8 @@ export default class Network {
 
 	/**
 	 * Add multiple edges from a list of [base_id, base_id].
-	 * @param  {EdgeArgs[]} edge_list
+	 * @param  {EdgeArgs[]} edge_args
+	 * @throws Errors in some cases.
 	 */
 	addEdgeListArgs(edge_args: EdgeArgs[]) {
 		edge_args.forEach((edge) => this.addEdge(edge));
@@ -534,15 +612,21 @@ export default class Network {
 	 * Removes an edge between the two given vertices.
 	 *
 	 * If the network is a multigraph, an ID is needed to remove a specific edge.
+	 *
 	 * @param  {Object} args
 	 * @param  {base_id} args.from
 	 * @param  {base_id} args.to
 	 * @param  {base_id} [args.id]
 	 */
 	removeEdge(args: { from: base_id; to: base_id; id?: base_id }) {
+		if (!args.id && this.is_multigraph) {
+			return;
+		}
 		this.edges.forEach(({ vertices }, id) => {
 			if (this.checkEdgeIsSame(vertices, args)) {
 				this.edges.delete(id);
+				//NOTE: added for vertex neighbor cache
+				this._neighbors_cached = false;
 				return;
 			}
 		});
@@ -604,33 +688,75 @@ export default class Network {
 	}
 
 	/**
-	 * @param  {VertexArgs} args
+	 * Add a vertex to this Network if it is not already in the Network.
+	 *
+	 * @param args id and optional weight of vertex
+	 * @returns total of vertices in this Network
 	 */
-	addVertex(args: VertexArgs) {
-		if (this.vertices.size >= this.vertex_limit)
+	addVertex(args: VertexArgs): number {
+		if (this.vertices.size + 1 >= this.vertex_limit)
 			throw { message: ERROR.VERTICE_LIMIT };
 		if (args.id !== undefined && this.vertices.has(args.id))
 			throw { message: ERROR.EXISTING_VERTICE };
 
-		this.vertices.set(args.id, new Vertex(args));
+		let res;
+		if (args.id !== undefined) {
+			//NOTE: added for vertex neighbor cache
+			this._neighbors_cached = false;
+			res = this.vertices.set(args.id, new Vertex(args));
+		} else {
+			res = this.vertices;
+		}
+		return res.size;
 	}
 
 	/**
 	 * Add multiple vertices from a map of vertices.
-	 * @param  {Map<base_id, Vertex>} vertex_map
+	 *
+	 * Be careful, if an added vertex already exist in Network,
+	 * his weight will be updated with the given value.
+	 *
+	 * @param  {Map<base_id, Vertex>} vertex_map list of vertices to add to this Network
+	 * @returns how many vertices were effectively added
+	 *
 	 */
-	addVertexMap(vertex_map: Map<base_id, Vertex>) {
-		vertex_map.forEach((vertex, id) => this.vertices.set(id, vertex));
+	addVertexMap(vertex_map: Map<base_id, Vertex>): number {
+		const how_many_to_add = vertex_map.size;
+		if (this.vertices.size + how_many_to_add >= this.vertex_limit)
+			throw { message: ERROR.VERTICE_LIMIT };
+
+		let added = 0;
+		vertex_map.forEach((vertex, id) => {
+			if (vertex.id !== undefined) {
+				added++;
+				this.vertices.set(id, vertex);
+			}
+		});
+		return added;
 	}
 
 	/**
 	 * Add multiple vertices from a list of VertexArgs.
-	 * @param  {VertexArgs[]} vertex_list
+	 *
+	 * Be careful, if an added vertex already exist in this Network,
+	 * his weight will be updated with the given value.
+	 *
+	 * @param vertex_list a list of vertices to add to this Network
+	 * @returns how many vertices were effectively added
 	 */
-	addVertexList(vertex_list: VertexArgs[]) {
-		vertex_list.forEach((vertex_args, id) =>
-			this.vertices.set(id, new Vertex(vertex_args))
-		);
+	addVertexList(vertex_list: VertexArgs[]): number {
+		const how_many_to_add = vertex_list.length;
+		if (this.vertices.size + how_many_to_add >= this.vertex_limit)
+			throw { message: ERROR.VERTICE_LIMIT };
+
+		let added = 0;
+		vertex_list.forEach((vertex_args, id) => {
+			if (vertex_args.id != undefined) {
+				added++;
+				this.vertices.set(id, new Vertex(vertex_args));
+			}
+		});
+		return added;
 	}
 
 	/**
@@ -641,6 +767,8 @@ export default class Network {
 		if (!this.vertices.has(id))
 			throw { message: ERROR.INEXISTENT_VERTICE, vertex: id };
 
+		//NOTE: ajout pour neighbor caching
+		this._neighbors_cached = false;
 		this.vertices.delete(id);
 
 		this.edges.forEach(({ vertices }, key) => {
@@ -723,32 +851,23 @@ export default class Network {
 	}
 
 	/**
-	 * Get list of neighbors to a vertex.
-	 * @param  {base_id} id vertex id
-	 * @returns neighbours as an array of base_id
+	 * Get list of neighbors to a vertex with weight included
+	 *
+	 * Uses a cache to speed up the search as this method is used in Dijkstra().
+	 *
+	 * @param node_id vertex id
+	 * @returns neighbours as an array of {to: , weight: }
+	 * @author ESHome33 - 2024
 	 */
 	edge_neighbors(id: base_id, oriented: boolean): VertexNeighbor[] {
-		const neighborhood: VertexNeighbor[] = [];
-
-		this.edges.forEach((e: Edge) => {
-			const w = e.weight;
-			const from_index = e.vertices.from;
-			const to_index = e.vertices.to;
-			if (from_index === id) {
-				const v = this.vertices.get(to_index);
-				if (v) {
-					neighborhood.push({ to: v, weight: w });
-				}
-			}
-			if (to_index === id && oriented) {
-				const v = this.vertices.get(from_index);
-				if (v) {
-					neighborhood.push({ to: v, weight: w });
-				}
-			}
-		});
-
-		return neighborhood;
+		//NOTE: neighbor cache usage or constructs the cache
+		if (!this._neighbors_cached) {
+			// construct neighbor cache
+			this.constructNeighborsCache(oriented);
+		}
+		// retrieve neighborhood from cache
+		const retour = this._neighbors[id];
+		return retour;
 	}
 
 	/**

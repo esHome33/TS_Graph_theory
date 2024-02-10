@@ -2,7 +2,11 @@ import { base_id, EdgeArgs } from "./enums.js";
 
 /**
  * Classe qui représente un arc entre deux noeuds. L'arc est dirigé
- * et comporte un poids (valeur 1 par défaut)
+ * et comporte un poids (valeur 1 par défaut).
+ *
+ * Class that represents and edge between two vertices and a weight
+ * (default weight = 1)
+ *
  */
 export class Edge {
 	private from: base_id;
@@ -13,6 +17,7 @@ export class Edge {
 	 * Create an edge between `from` and `to`.
 	 *
 	 * Weight is set to 1 by default (i.e. unweighted).
+	 *
 	 * @param  {EdgeArgs} args
 	 */
 	constructor(args: EdgeArgs) {
@@ -36,7 +41,6 @@ export class Edge {
 		return { from: this.from, to: this.to, weight: this.weight };
 	}
 
-
 	toString(): string {
 		return `${this.from} -> ${this.to} W:${this.weight}`;
 	}
@@ -59,8 +63,9 @@ export class Edge {
 	}
 
 	/**
-	 * dans cet arc, cherche le noeud opposé à l'id fourni (s'il se trouve dans cet arc !
+	 * Dans cet arc, cherche le noeud opposé à l'id fourni (s'il se trouve dans cet arc !
 	 * fournit ```undefined``` sinon).
+	 *
 	 * @param vertex_id l'identifiant cherché
 	 * @returns un noeud. Le noeud opposé à l'id fourni (s'il y est) ou ```undefined```
 	 */
@@ -72,6 +77,7 @@ export class Edge {
 
 	/**
 	 * Vérifie si l'identifiant est contenu dans cet arc.
+	 *
 	 * @param vertex_id l'identifiant recherché
 	 * @returns vrai si le noeud de départ ou le noeud d'arrivée porte l'identifiant fourni
 	 */

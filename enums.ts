@@ -1,6 +1,5 @@
-
 /**
- * base type of what can be stored in a Network
+ * base type of what can be stored in a Network : ```string``` ```number```
  */
 export type base_id = string | number;
 
@@ -18,15 +17,16 @@ export interface EdgeNeighborhood {
 	};
 }
 
-
-
+/**
+ * Vertex ```id``` and optional ```weight```
+ */
 export interface VertexArgs {
 	id: base_id;
 	weight?: number;
 }
 
 /**
- * all to define an Edge : from, to, id, weight, do_force
+ * all to define an Edge : ```from```  ```to```   ```id```    ```weight```   ```do_force```
  */
 export interface EdgeArgs {
 	from: base_id;
@@ -36,6 +36,9 @@ export interface EdgeArgs {
 	do_force?: boolean;
 }
 
+/**
+ *  ```is_directed```   ```is_multigraph```   ```edge_limit```    ```vertex_limit```
+ */
 export interface NetworkArgs {
 	is_directed?: boolean;
 	is_multigraph?: boolean;
@@ -43,10 +46,14 @@ export interface NetworkArgs {
 	vertex_limit?: number;
 }
 
+/**
+ *  array of ```string[]```
+ */
 export type ParsedCSV = string[][];
 
 /**
- * different erros that can be thrown during execution of NeTS' algorithms
+ * different erros that can be thrown
+ * during execution of NeTS' algorithms
  */
 export const ERROR = {
 	UNDEFINED_VALUES: "Undefined values being given as arguments!",

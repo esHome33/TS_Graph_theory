@@ -95,29 +95,28 @@ export default class Network {
 		const s_ok = this.hasVertex(start);
 		const e_ok = this.hasVertex(end);
 		if (!(s_ok && e_ok)) {
-			let liste: string[] = [];
 			if (!s_ok) {
-				liste.push("ERREUR : le noeud de départ n'est pas dans le graphe");
-				throw { message: ERROR.INEXISTENT_START_VERTICE };
+				throw {
+					message: `${ERROR.INEXISTENT_START_VERTICE} in dijkstra() - ${start}`,
+				};
 			}
 			if (!e_ok) {
-				liste.push("ERREUR : le noeud d'arrivée n'est pas dans le graphe");
-				throw { message: ERROR.INEXISTENT_END_VERTICE };
+				throw {
+					message: `${ERROR.INEXISTENT_END_VERTICE} in dijkstra() - ${end}`,
+				};
 			}
-
-			return {
-				predecessors: liste,
-				path: "ERREUR path not available",
-			};
 		}
 		// initialisation of all nodes in the Network
 		this.value_a_infini(this.vertices);
 
 		const start_vertex: Vertex | undefined = this.vertices.get(start);
+		/// normally, this cannot happen here (already checked before)
 		if (!start_vertex) {
 			return {
-				predecessors: ["ERREUR start vertex not found"],
-				path: "ERREUR path not available",
+				predecessors: [
+					`${ERROR.INEXISTENT_START_VERTICE} in dijkstra() - ${start}`,
+				],
+				path: "ERROR path not available in dijsktra()",
 			};
 		}
 		start_vertex.weight = 0;
@@ -128,7 +127,6 @@ export default class Network {
 		// init predecessors of the start node and put the start node in the visited_vertices list.
 		this.predecessor[start_vertex.id] = null;
 
-		// determine while condition : DEBUG only
 		let finish = false;
 		let counter = 0;
 
@@ -155,9 +153,14 @@ export default class Network {
 				if (update_done) {
 					queue.push(voisin.to); /// inclut le voisin dans la liste triée selon le poids.
 				}
+				/* uncomment this if you want to finish as soon as the end vertex is found
+				if (voisin.to.id === end) {
+					finish = true;
+					break;
+				}
+				*/
 			}
 		}
-		//console.log(`main while loop exited (${counter} iterations)`);
 		const resu = this.getPredecesseurs(this.predecessor);
 		const chemin = this.analysePredecesseurs(this.predecessor, end);
 		return { predecessors: resu, path: chemin };
